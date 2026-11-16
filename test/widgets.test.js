@@ -1,77 +1,83 @@
+// -----------------------------------------------------------------------------
+// The "Grid frequency" widget through the fake Gladys: valid for the core,
+// within its budget, its device references pointing at features that exist.
+// -----------------------------------------------------------------------------
+
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { validateWidgetContent } from '@gladysassistant/integration-sdk';
-import { createFakeGladys } from '@gladysassistant/integration-sdk/testing';
-import { buildDiscoveredDevices } from '../src/devices/index.js';
-import { simulateLanSession } from '../src/devices/plug.js';
-import { DEMO_STATUS_WIDGET, WIDGETS, refreshWidgets } from '../src/widgets.js';
-import { normalizeConfig } from '../src/config.js';
+import { WIDGET_KEY } from '../src/widgets.js';
+import { createWorld } from './helpers/world.js';
 
-const gladys = createFakeGladys();
-const config = normalizeConfig();
-const demoStatus = WIDGETS[DEMO_STATUS_WIDGET];
+const CE = 'ext:test-integration:zone:continental';
+const GB = 'ext:test-integration:zone:gb';
 
-// What the SDK passes to onWidgetGet, plus the config index.js adds.
-const getContent = (cfg = config) =>
-  demoStatus.get(gladys, { settings: {}, language: 'en', units: 'metric', config: cfg });
+const get = async (world, settings, language = 'fr') => {
+  const ack = await world.fake.widgetGet(WIDGET_KEY, { settings, language });
+  assert.equal(ack.success, true, JSON.stringify(ack.error));
+  const content = ack.data.content;
+  assert.deepEqual(validateWidgetContent(content), []);
+  assert.ok(content.components.length <= 8);
+  assert.ok(content.components.filter((c) => c.type === 'text').length <= 2);
+  return content;
+};
 
-test('the demo_status content is rendered exactly as sent', async () => {
-  // [] = nothing the core would drop, truncate or trim to the content budget.
-  assert.deepEqual(validateWidgetContent(await getContent()), []);
-});
-
-test('the degraded plug connection content is valid too', async () => {
-  simulateLanSession(false);
-  try {
-    const content = await getContent();
-    assert.deepEqual(validateWidgetContent(content), []);
-    const status = content.components.find((component) => component.type === 'status');
-    assert.ok(
-      status.items.some((item) => item.color === 'warning'),
-      'degraded shows a warning',
-    );
-  } finally {
-    simulateLanSession(true);
-  }
-});
-
-test('the live tiles reference features the integration publishes', async () => {
-  const featureIds = new Set(
-    buildDiscoveredDevices(gladys, config).flatMap((device) =>
-      device.features.map((feature) => feature.external_id),
-    ),
+test('a zone: name from Gladys, frequency, deviation, last hour, state, source', async (t) => {
+  const world = await createWorld({ config: { gb: true } });
+  t.after(() => world.app.stop());
+  const content = await get(world, { zone: GB });
+  assert.equal(content.ttl_seconds, 30);
+  const [heading, frequency, deviation, chart, status, caption] = content.components;
+  assert.equal(heading.text, 'Device gb');
+  assert.deepEqual([frequency.value, frequency.unit], [49.94, 'Hz']);
+  assert.deepEqual([deviation.value, deviation.unit, deviation.color], ['−60', 'mHz', 'success']);
+  assert.deepEqual(chart.device_features, [`${GB}:frequency`]);
+  // The reference points at a feature the device really has.
+  const device = world.fake.discoveredDevices.find((d) => d.external_id === GB);
+  assert.ok(device.features.some((f) => f.external_id === chart.device_features[0]));
+  assert.deepEqual(
+    status.items.map((i) => i.value),
+    ['Normal', 'Elexon BMRS'],
   );
-  const liveTiles = (await getContent()).components.filter((c) => c.device_feature);
-  assert.ok(liveTiles.length > 0, 'the template demonstrates a device-bound tile');
-  for (const tile of liveTiles) {
-    assert.ok(featureIds.has(tile.device_feature), `unknown feature ${tile.device_feature}`);
-  }
+  assert.equal(caption.text, 'Mesure de 16:17:45');
 });
 
-test('every button action of the content is handled and answers a short toast', async () => {
-  const buttons = (await getContent()).components.filter((c) => c.type === 'button' && c.action);
-  assert.ok(buttons.length > 0, 'the template demonstrates a widget action');
-  for (const { action } of buttons) {
-    const message = await demoStatus.action(gladys, {
-      actionKey: action.key,
-      params: action.params ?? {},
-      settings: {},
-      config,
-    });
-    assert.ok(message.en, 'the toast carries at least the mandatory `en` text');
-    assert.ok(message.en.length <= 200, 'toasts are capped at 200 characters');
-  }
-});
-
-test('an unknown widget action fails, so the user sees the error', async () => {
-  await assert.rejects(
-    demoStatus.action(gladys, { actionKey: 'unknown', params: {}, settings: {}, config }),
-    /Unknown widget action/,
+test('the optional blocks can be hidden, the colour follows the grid state', async (t) => {
+  const world = await createWorld({ config: {} });
+  t.after(() => world.app.stop());
+  world.api.setFrequency(49.75, world.clock.now());
+  await world.app.tick();
+  const content = await get(world, { zone: CE, show_chart: false, show_status: false }, 'de');
+  assert.deepEqual(
+    content.components.map((c) => c.type),
+    ['text', 'value', 'value', 'text'],
   );
+  assert.equal(content.components[2].value, '−250');
+  assert.equal(content.components[2].color, 'danger');
+  assert.equal(content.components[1].label, 'Frequenz');
 });
 
-test('refreshWidgets nudges every widget', () => {
-  const fresh = createFakeGladys();
-  refreshWidgets(fresh);
-  assert.deepEqual(fresh.fake.widgetRefreshes, Object.keys(WIDGETS));
+test('a zone without device is read on demand, without chart', async (t) => {
+  const world = await createWorld({ created: false, config: {} });
+  t.after(() => world.app.stop());
+  const content = await get(world, {}, 'en');
+  assert.equal(content.components[0].text, 'Grid frequency Continental Europe');
+  assert.ok(!content.components.some((c) => c.type === 'chart'));
+  assert.equal(world.api.count('netzfrequenzmessung'), 1);
+  await get(world, {}, 'en');
+  assert.equal(world.api.count('netzfrequenzmessung'), 1, 'not again within the interval');
+});
+
+test('no zone, or nothing readable: a sentence', async (t) => {
+  const none = await createWorld({ config: { continental: false } });
+  t.after(() => none.app.stop());
+  const empty = await get(none, {}, 'es');
+  assert.match(empty.components[0].text, /Elija una zona/);
+
+  const world = await createWorld({ created: false, config: {} });
+  t.after(() => world.app.stop());
+  world.api.down.add('netzfrequenzmessung');
+  world.api.down.add('netzfrequenz_info');
+  const down = await get(world, {}, 'fr');
+  assert.match(down.components[1].text, /Aucune source ne répond/);
 });

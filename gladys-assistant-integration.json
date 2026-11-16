@@ -1,177 +1,574 @@
 {
   "manifest_version": 1,
   "type": "device",
-  "name": "Demo Devices Template",
+  "name": "Grid Frequency",
   "description": {
-    "en": "Starter template showing sensors, a switch, a dimmable light and a smart plug.",
-    "fr": "Template de démarrage : capteurs, interrupteur, lampe variable et prise connectée."
+    "en": "Real-time frequency of the European power grids: continental, Nordic and Great Britain.",
+    "fr": "Fréquence en temps réel des réseaux électriques européens : continental, nordique, britannique.",
+    "de": "Echtzeit-Frequenz der europäischen Stromnetze: Kontinentaleuropa, Nordeuropa, Großbritannien.",
+    "es": "Frecuencia en tiempo real de las redes eléctricas europeas: continental, nórdica y británica."
   },
   "version": "1.0.0",
-  "docker_image": "ghcr.io/gladysassistant/integration-template-js:1.0.0",
-  "gladys_version": ">=5.1.0",
-  "cover_image": "https://raw.githubusercontent.com/GladysAssistant/integration-template-js/master/cover.png",
-  "categories": ["lighting", "security", "environment"],
-  "transports": ["local", "cloud"],
+  "docker_image": "ghcr.io/guim31/gladys-grid-frequency:1.0.0",
+  "gladys_version": ">=5.2.0",
+  "cover_image": "https://raw.githubusercontent.com/guim31/gladys-grid-frequency/main/cover.png",
+  "categories": ["energy"],
+  "transports": ["local"],
   "config_schema": [
     {
       "key": "intro",
       "type": "section",
-      "label": { "en": "Getting started", "fr": "Pour commencer" },
+      "label": {
+        "en": "Open sources, no account",
+        "fr": "Sources ouvertes, sans compte",
+        "de": "Offene Quellen, ohne Konto",
+        "es": "Fuentes abiertas, sin cuenta"
+      },
       "description": {
-        "en": "The demo weather station reads real data from the free Open-Meteo API: pick the coordinates to observe. No account, no API key.",
-        "fr": "La station météo de démonstration lit de vraies données via l'API gratuite Open-Meteo : choisissez les coordonnées à observer. Pas de compte, pas de clé d'API."
+        "en": "The frequency tells the balance between production and consumption, at 50 Hz in Europe. Read from netzfrequenzmessung.de and netzfrequenz.info (continental), Statnett (Nordic) and Elexon (Great Britain). Not affiliated with them.",
+        "fr": "La fréquence dit l'équilibre entre production et consommation, à 50 Hz en Europe. Lue sur netzfrequenzmessung.de et netzfrequenz.info (continental), Statnett (nordique) et Elexon (britannique). Sans lien avec eux.",
+        "de": "Die Frequenz zeigt das Gleichgewicht von Erzeugung und Verbrauch, in Europa 50 Hz. Gelesen bei netzfrequenzmessung.de und netzfrequenz.info (Kontinent), Statnett (Nordeuropa) und Elexon (Großbritannien). Nicht mit ihnen verbunden.",
+        "es": "La frecuencia indica el equilibrio entre producción y consumo, 50 Hz en Europa. Leída en netzfrequenzmessung.de y netzfrequenz.info (continental), Statnett (nórdica) y Elexon (británica). Sin relación con ellos."
       },
       "links": [
         {
-          "url": "https://open-meteo.com/en/docs",
-          "label": { "en": "Open-Meteo documentation", "fr": "Documentation Open-Meteo" }
+          "url": "https://www.netzfrequenzmessung.de",
+          "label": {
+            "en": "netzfrequenzmessung.de",
+            "fr": "netzfrequenzmessung.de",
+            "de": "netzfrequenzmessung.de",
+            "es": "netzfrequenzmessung.de"
+          }
+        },
+        {
+          "url": "https://driftsdata.statnett.no",
+          "label": {
+            "en": "Statnett operational data",
+            "fr": "Données d'exploitation Statnett",
+            "de": "Betriebsdaten von Statnett",
+            "es": "Datos operativos de Statnett"
+          }
+        },
+        {
+          "url": "https://bmrs.elexon.co.uk",
+          "label": {
+            "en": "Elexon BMRS",
+            "fr": "Elexon BMRS",
+            "de": "Elexon BMRS",
+            "es": "Elexon BMRS"
+          }
         }
       ]
     },
     {
-      "key": "latitude",
-      "type": "number",
-      "label": { "en": "Latitude", "fr": "Latitude" },
-      "description": {
-        "en": "Latitude used for the demo weather sensor.",
-        "fr": "Latitude utilisée par le capteur météo de démonstration."
-      },
-      "placeholder": { "en": "e.g. 48.8566", "fr": "ex. 48.8566" },
-      "required": true,
-      "default": 48.8566,
-      "min": -90,
-      "max": 90
-    },
-    {
-      "key": "longitude",
-      "type": "number",
-      "label": { "en": "Longitude", "fr": "Longitude" },
-      "description": {
-        "en": "Longitude used for the demo weather sensor.",
-        "fr": "Longitude utilisée par le capteur météo de démonstration."
-      },
-      "placeholder": { "en": "e.g. 2.3522", "fr": "ex. 2.3522" },
-      "required": true,
-      "default": 2.3522,
-      "min": -180,
-      "max": 180
-    },
-    {
-      "key": "unit",
+      "key": "language",
       "type": "select",
-      "label": { "en": "Temperature unit", "fr": "Unité de température" },
+      "label": {
+        "en": "Language of the names",
+        "fr": "Langue des noms",
+        "de": "Sprache der Namen",
+        "es": "Idioma de los nombres"
+      },
+      "description": {
+        "en": "Language of the device and feature names (fixed when a device is added) and of the texts sent to scenes.",
+        "fr": "Langue des noms d'appareils et de fonctionnalités (figés à l'ajout d'un appareil) et des textes envoyés aux scènes.",
+        "de": "Sprache der Geräte- und Funktionsnamen (beim Hinzufügen festgelegt) und der Texte für Szenen.",
+        "es": "Idioma de los nombres de dispositivos y funciones (fijados al añadir un dispositivo) y de los textos enviados a las escenas."
+      },
       "required": false,
-      "default": "celsius",
+      "default": "fr",
       "options": [
-        { "value": "celsius", "label": { "en": "Celsius", "fr": "Celsius" } },
-        { "value": "fahrenheit", "label": { "en": "Fahrenheit", "fr": "Fahrenheit" } }
+        {
+          "value": "en",
+          "label": {
+            "en": "English",
+            "fr": "Anglais",
+            "de": "Englisch",
+            "es": "Inglés"
+          }
+        },
+        {
+          "value": "fr",
+          "label": {
+            "en": "French",
+            "fr": "Français",
+            "de": "Französisch",
+            "es": "Francés"
+          }
+        },
+        {
+          "value": "de",
+          "label": {
+            "en": "German",
+            "fr": "Allemand",
+            "de": "Deutsch",
+            "es": "Alemán"
+          }
+        },
+        {
+          "value": "es",
+          "label": {
+            "en": "Spanish",
+            "fr": "Espagnol",
+            "de": "Spanisch",
+            "es": "Español"
+          }
+        }
       ]
     },
     {
-      "key": "poll_frequency",
-      "type": "number",
-      "label": { "en": "Refresh interval (s)", "fr": "Intervalle de rafraîchissement (s)" },
+      "key": "continental",
+      "type": "boolean",
+      "label": {
+        "en": "Continental Europe",
+        "fr": "Europe continentale",
+        "de": "Kontinentaleuropa",
+        "es": "Europa continental"
+      },
       "description": {
-        "en": "How often sensors are polled, in seconds (one minute minimum).",
-        "fr": "Fréquence d'interrogation des capteurs, en secondes (une minute minimum)."
+        "en": "From Portugal to Poland and Greece, France and Germany included: one device.",
+        "fr": "Du Portugal à la Pologne et à la Grèce, France et Allemagne comprises : un appareil.",
+        "de": "Von Portugal bis Polen und Griechenland, mit Frankreich und Deutschland: ein Gerät.",
+        "es": "De Portugal a Polonia y Grecia, Francia y Alemania incluidas: un dispositivo."
       },
       "required": false,
-      "default": 300,
-      "min": 60,
-      "max": 3600
+      "default": true
+    },
+    {
+      "key": "nordic",
+      "type": "boolean",
+      "label": {
+        "en": "Nordic area",
+        "fr": "Zone nordique",
+        "de": "Nordeuropa",
+        "es": "Zona nórdica"
+      },
+      "description": {
+        "en": "Norway, Sweden, Finland and eastern Denmark: one device.",
+        "fr": "Norvège, Suède, Finlande et est du Danemark : un appareil.",
+        "de": "Norwegen, Schweden, Finnland und Ostdänemark: ein Gerät.",
+        "es": "Noruega, Suecia, Finlandia y el este de Dinamarca: un dispositivo."
+      },
+      "required": false,
+      "default": false
+    },
+    {
+      "key": "gb",
+      "type": "boolean",
+      "label": {
+        "en": "Great Britain",
+        "fr": "Grande-Bretagne",
+        "de": "Großbritannien",
+        "es": "Gran Bretaña"
+      },
+      "description": {
+        "en": "England, Scotland and Wales: one device. The values arrive about two minutes late.",
+        "fr": "Angleterre, Écosse et pays de Galles : un appareil. Les valeurs arrivent avec environ deux minutes de retard.",
+        "de": "England, Schottland und Wales: ein Gerät. Die Werte kommen etwa zwei Minuten verspätet.",
+        "es": "Inglaterra, Escocia y Gales: un dispositivo. Los valores llegan con unos dos minutos de retraso."
+      },
+      "required": false,
+      "default": false
+    },
+    {
+      "key": "interval_seconds",
+      "type": "select",
+      "label": {
+        "en": "Reading interval",
+        "fr": "Intervalle de lecture",
+        "de": "Leseintervall",
+        "es": "Intervalo de lectura"
+      },
+      "description": {
+        "en": "How often each zone is read. Every reading can change the states: 30 s is a good balance.",
+        "fr": "Fréquence de lecture de chaque zone. Chaque lecture peut changer les états : 30 s est un bon compromis.",
+        "de": "Wie oft jede Zone gelesen wird. Jede Lesung kann die Zustände ändern: 30 s ist ein guter Kompromiss.",
+        "es": "Frecuencia de lectura de cada zona. Cada lectura puede cambiar los estados: 30 s es un buen equilibrio."
+      },
+      "required": false,
+      "default": "30",
+      "options": [
+        {
+          "value": "10",
+          "label": {
+            "en": "10 s",
+            "fr": "10 s",
+            "de": "10 s",
+            "es": "10 s"
+          }
+        },
+        {
+          "value": "15",
+          "label": {
+            "en": "15 s",
+            "fr": "15 s",
+            "de": "15 s",
+            "es": "15 s"
+          }
+        },
+        {
+          "value": "30",
+          "label": {
+            "en": "30 s",
+            "fr": "30 s",
+            "de": "30 s",
+            "es": "30 s"
+          }
+        },
+        {
+          "value": "60",
+          "label": {
+            "en": "60 s",
+            "fr": "60 s",
+            "de": "60 s",
+            "es": "60 s"
+          }
+        }
+      ]
+    },
+    {
+      "key": "alert_threshold_mhz",
+      "type": "select",
+      "label": {
+        "en": "Alert threshold",
+        "fr": "Seuil d'alerte",
+        "de": "Alarmschwelle",
+        "es": "Umbral de alerta"
+      },
+      "description": {
+        "en": "Deviation from 50 Hz that fires the scene trigger. 100 mHz is rare on the continent, usual in Great Britain.",
+        "fr": "Écart à 50 Hz qui déclenche les scènes. 100 mHz est rare sur le continent, courant en Grande-Bretagne.",
+        "de": "Abweichung von 50 Hz, die die Szenen auslöst. 100 mHz ist auf dem Kontinent selten, in Großbritannien üblich.",
+        "es": "Desviación de 50 Hz que activa las escenas. 100 mHz es raro en el continente, habitual en Gran Bretaña."
+      },
+      "required": false,
+      "default": "100",
+      "options": [
+        {
+          "value": "50",
+          "label": {
+            "en": "±50 mHz",
+            "fr": "±50 mHz",
+            "de": "±50 mHz",
+            "es": "±50 mHz"
+          }
+        },
+        {
+          "value": "100",
+          "label": {
+            "en": "±100 mHz",
+            "fr": "±100 mHz",
+            "de": "±100 mHz",
+            "es": "±100 mHz"
+          }
+        },
+        {
+          "value": "150",
+          "label": {
+            "en": "±150 mHz",
+            "fr": "±150 mHz",
+            "de": "±150 mHz",
+            "es": "±150 mHz"
+          }
+        },
+        {
+          "value": "200",
+          "label": {
+            "en": "±200 mHz",
+            "fr": "±200 mHz",
+            "de": "±200 mHz",
+            "es": "±200 mHz"
+          }
+        },
+        {
+          "value": "300",
+          "label": {
+            "en": "±300 mHz",
+            "fr": "±300 mHz",
+            "de": "±300 mHz",
+            "es": "±300 mHz"
+          }
+        },
+        {
+          "value": "500",
+          "label": {
+            "en": "±500 mHz",
+            "fr": "±500 mHz",
+            "de": "±500 mHz",
+            "es": "±500 mHz"
+          }
+        }
+      ]
     }
   ],
   "actions": [
     {
-      "key": "test_weather",
-      "label": { "en": "Test the weather provider", "fr": "Tester le fournisseur météo" },
+      "key": "test_sources",
+      "label": {
+        "en": "Test the sources",
+        "fr": "Tester les sources",
+        "de": "Quellen testen",
+        "es": "Probar las fuentes"
+      },
       "timeout_seconds": 30
-    },
-    {
-      "key": "identify",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
-      "fields": [
-        {
-          "key": "device",
-          "type": "select",
-          "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
-          "required": true
-        }
-      ]
     }
   ],
   "scene_triggers": [
     {
-      "key": "motion_detected",
-      "label": { "en": "Motion detected", "fr": "Mouvement détecté" },
+      "key": "frequency_deviation",
+      "label": {
+        "en": "Frequency beyond the threshold",
+        "fr": "Fréquence au-delà du seuil",
+        "de": "Frequenz jenseits der Schwelle",
+        "es": "Frecuencia más allá del umbral"
+      },
       "description": {
-        "en": "A demo motion sensor saw a person or an animal move.",
-        "fr": "Un détecteur de démonstration a vu bouger une personne ou un animal."
+        "en": "The frequency of a zone moves further from 50 Hz than the alert threshold of the configuration. Once per excursion.",
+        "fr": "La fréquence d'une zone s'éloigne de 50 Hz au-delà du seuil d'alerte de la configuration. Une fois par écart.",
+        "de": "Die Frequenz einer Zone entfernt sich weiter von 50 Hz als die Alarmschwelle der Konfiguration. Einmal pro Abweichung.",
+        "es": "La frecuencia de una zona se aleja de 50 Hz más allá del umbral de alerta de la configuración. Una vez por desviación."
       },
       "fields": [
         {
           "key": "device",
           "type": "select",
           "source": "devices",
-          "label": { "en": "Sensor", "fr": "Détecteur" }
+          "label": {
+            "en": "Zone",
+            "fr": "Zone",
+            "de": "Zone",
+            "es": "Zona"
+          }
         },
         {
-          "key": "target",
+          "key": "direction",
           "type": "multi_select",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" },
+          "label": {
+            "en": "Direction",
+            "fr": "Sens",
+            "de": "Richtung",
+            "es": "Sentido"
+          },
           "options": [
-            { "value": "person", "label": { "en": "Person", "fr": "Personne" } },
-            { "value": "animal", "label": { "en": "Animal", "fr": "Animal" } }
+            {
+              "value": "low",
+              "label": {
+                "en": "Under 50 Hz (shortage)",
+                "fr": "Sous 50 Hz (déficit)",
+                "de": "Unter 50 Hz (Mangel)",
+                "es": "Por debajo de 50 Hz (déficit)"
+              }
+            },
+            {
+              "value": "high",
+              "label": {
+                "en": "Over 50 Hz (surplus)",
+                "fr": "Au-dessus de 50 Hz (surplus)",
+                "de": "Über 50 Hz (Überschuss)",
+                "es": "Por encima de 50 Hz (excedente)"
+              }
+            }
           ]
         }
       ],
       "variables": [
         {
-          "key": "target",
+          "key": "direction",
           "type": "string",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" }
+          "label": {
+            "en": "Direction (low, high)",
+            "fr": "Sens (low, high)",
+            "de": "Richtung (low, high)",
+            "es": "Sentido (low, high)"
+          }
+        },
+        {
+          "key": "frequency",
+          "type": "number",
+          "label": {
+            "en": "Frequency (Hz)",
+            "fr": "Fréquence (Hz)",
+            "de": "Frequenz (Hz)",
+            "es": "Frecuencia (Hz)"
+          }
+        },
+        {
+          "key": "deviation_mhz",
+          "type": "number",
+          "label": {
+            "en": "Deviation (mHz)",
+            "fr": "Écart (mHz)",
+            "de": "Abweichung (mHz)",
+            "es": "Desviación (mHz)"
+          }
+        },
+        {
+          "key": "threshold_mhz",
+          "type": "number",
+          "label": {
+            "en": "Threshold (mHz)",
+            "fr": "Seuil (mHz)",
+            "de": "Schwelle (mHz)",
+            "es": "Umbral (mHz)"
+          }
+        },
+        {
+          "key": "state",
+          "type": "string",
+          "label": {
+            "en": "Grid state",
+            "fr": "État du réseau",
+            "de": "Netzzustand",
+            "es": "Estado de la red"
+          }
+        },
+        {
+          "key": "zone",
+          "type": "string",
+          "label": {
+            "en": "Zone",
+            "fr": "Zone",
+            "de": "Zone",
+            "es": "Zona"
+          }
         }
       ]
-    }
-  ],
-  "scene_actions": [
+    },
     {
-      "key": "identify_device",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
-      "description": {
-        "en": "Make a device signal itself (the demo light blinks).",
-        "fr": "Fait se signaler un appareil (la lampe de démonstration clignote)."
+      "key": "frequency_normal",
+      "label": {
+        "en": "Frequency back to normal",
+        "fr": "Retour à la normale",
+        "de": "Frequenz wieder normal",
+        "es": "Frecuencia de nuevo normal"
       },
-      "timeout_seconds": 15,
+      "description": {
+        "en": "After an excursion, the deviation of the zone falls back under 80 % of the alert threshold.",
+        "fr": "Après un écart, l'écart de la zone redescend sous 80 % du seuil d'alerte.",
+        "de": "Nach einer Abweichung fällt die Abweichung der Zone unter 80 % der Alarmschwelle zurück.",
+        "es": "Tras una desviación, la desviación de la zona vuelve por debajo del 80 % del umbral de alerta."
+      },
       "fields": [
         {
           "key": "device",
           "type": "select",
           "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
-          "required": true
+          "label": {
+            "en": "Zone",
+            "fr": "Zone",
+            "de": "Zone",
+            "es": "Zona"
+          }
         }
       ],
-      "outputs": [
+      "variables": [
         {
-          "key": "signalled",
-          "type": "boolean",
-          "label": { "en": "Device signalled", "fr": "Appareil signalé" }
+          "key": "frequency",
+          "type": "number",
+          "label": {
+            "en": "Frequency (Hz)",
+            "fr": "Fréquence (Hz)",
+            "de": "Frequenz (Hz)",
+            "es": "Frecuencia (Hz)"
+          }
+        },
+        {
+          "key": "deviation_mhz",
+          "type": "number",
+          "label": {
+            "en": "Deviation (mHz)",
+            "fr": "Écart (mHz)",
+            "de": "Abweichung (mHz)",
+            "es": "Desviación (mHz)"
+          }
+        },
+        {
+          "key": "peak_deviation_mhz",
+          "type": "number",
+          "label": {
+            "en": "Peak deviation (mHz)",
+            "fr": "Écart maximal (mHz)",
+            "de": "Größte Abweichung (mHz)",
+            "es": "Desviación máxima (mHz)"
+          }
+        },
+        {
+          "key": "duration_seconds",
+          "type": "number",
+          "label": {
+            "en": "Duration (seconds)",
+            "fr": "Durée (secondes)",
+            "de": "Dauer (Sekunden)",
+            "es": "Duración (segundos)"
+          }
+        },
+        {
+          "key": "zone",
+          "type": "string",
+          "label": {
+            "en": "Zone",
+            "fr": "Zone",
+            "de": "Zone",
+            "es": "Zona"
+          }
         }
       ]
     }
   ],
   "widgets": [
     {
-      "key": "demo_status",
-      "label": { "en": "Demo status", "fr": "État de la démo" },
+      "key": "grid_frequency",
+      "label": {
+        "en": "Grid frequency",
+        "fr": "Fréquence du réseau",
+        "de": "Netzfrequenz",
+        "es": "Frecuencia de la red"
+      },
       "description": {
-        "en": "Live temperature and plug power, plug connection and observed location.",
-        "fr": "Température et puissance en direct, connexion de la prise, position observée."
+        "en": "Frequency, deviation from 50 Hz and grid state of a zone, with its last hour.",
+        "fr": "Fréquence, écart à 50 Hz et état du réseau d'une zone, avec sa dernière heure.",
+        "de": "Frequenz, Abweichung von 50 Hz und Netzzustand einer Zone, mit der letzten Stunde.",
+        "es": "Frecuencia, desviación de 50 Hz y estado de la red de una zona, con su última hora."
       },
       "icon": "activity",
-      "action_timeout_seconds": 15
+      "settings": [
+        {
+          "key": "zone",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Zone",
+            "fr": "Zone",
+            "de": "Zone",
+            "es": "Zona"
+          },
+          "required": false
+        },
+        {
+          "key": "show_chart",
+          "type": "boolean",
+          "label": {
+            "en": "Show the last hour",
+            "fr": "Afficher la dernière heure",
+            "de": "Letzte Stunde anzeigen",
+            "es": "Mostrar la última hora"
+          },
+          "required": false,
+          "default": true
+        },
+        {
+          "key": "show_status",
+          "type": "boolean",
+          "label": {
+            "en": "Show state and source",
+            "fr": "Afficher état et source",
+            "de": "Zustand und Quelle anzeigen",
+            "es": "Mostrar estado y fuente"
+          },
+          "required": false,
+          "default": true
+        }
+      ]
     }
   ]
 }

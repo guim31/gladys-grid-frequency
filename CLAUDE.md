@@ -32,15 +32,17 @@ pushing.
 
 ```
 index.js                          SDK wiring only: handlers registered before connect()
-src/devices/index.js              registry of the device blueprints + dispatch helpers
-src/devices/<type>.js             one device type per file (buildDevice, onPoll, onSetValue...)
-src/scenes.js                     scene action handlers (manifest `scene_actions`)
-src/widgets.js                    dashboard widget handlers (manifest `widgets`)
+src/app.js                        timer, fallback between sources, states, triggers, action, widget handler
+src/sources.js                    the four readers (netzfrequenzmessung.de, netzfrequenz.info, Statnett, Elexon)
+src/zones.js                      the three synchronous areas: sources, freshness, grid-state bands
+src/devices.js                    one device per zone + its states
+src/widgets.js                    the "grid_frequency" dashboard widget
+src/i18n.js                       every text in en/fr/de/es
+src/issues.js                     repeated failures logged once
 src/config.js                     DEFAULT_CONFIG (mirrors the manifest defaults) + normalization
-src/weather.js                    example driver (Open-Meteo)
-gladys-assistant-integration.json manifest: name, config_schema, actions, image...
-docs/en.md, docs/fr.md            user documentation, re-hosted by Gladys (mandatory)
-test/                             node --test, against the SDK's fake Gladys (integration-sdk/testing)
+gladys-assistant-integration.json manifest: name, config_schema, actions, triggers, widget...
+docs/{en,fr,de,es}.md             user documentation, re-hosted by Gladys (mandatory)
+test/                             node --test, against the SDK's fake Gladys and real answers (16/11/2026)
 .github/scripts/release.mjs       release helpers (manifest bump, changelog), tested in test/
 ```
 
@@ -58,7 +60,7 @@ test/                             node --test, against the SDK's fake Gladys (in
   one, `0`/`0` for a feature without a range (text, image...). A missing one
   can pass the publication on a core that does not check it, then fail when
   the user clicks "Add" (HTTP 422 `t_device_feature.min cannot be null`). The
-  SDK's fake Gladys refuses it on publication, and `test/devices.test.js`
+  SDK's fake Gladys refuses it on publication, and `test/gladys-rules.test.js`
   checks them.
 - **The container rootfs is read-only.** Write only under `/data`, the one
   writable volume. Never log tokens, passwords or API keys.
@@ -259,3 +261,24 @@ long, et sur un « Sie »/« Ihr… » de politesse en allemand. Le store exige 
 - Docs `en`, `fr`, `de`, `es` avec les mêmes sections.
 - Chauffe, ouverture, sécurité : ne rien rendre pilotable « comme un thermostat » ou par un assistant
   vocal quand une erreur serait dangereuse (leçon d'OctoPrint).
+
+## Grid Frequency : sources et pièges (16/11/2026)
+
+- **Sources** (aucune clé) : `https://dat.netzfrequenzmessung.de:9080/frequenz.xml` (`<f>`, `<z>` ISO UTC ;
+  interface documentée « für den privaten Gebrauch », pas plus d'un appel par seconde) ;
+  `https://www.netzfrequenz.info/json/aktuell.json` (`{ freq, time }`, secondes ; `act.json` donne la valeur seule,
+  sans heure : inutilisable) ; Statnett `driftsdata.statnett.no/restapi/Frequency/BySecond?From=<ms>` (sans `From`,
+  la dernière heure, 3600 valeurs ; valeur réelle toutes les 10 s, répétée chaque seconde) ; Elexon
+  `data.elexon.co.uk/bmrs/api/v1/datasets/FREQ?measurementDateTimeFrom=…&measurementDateTimeTo=…` (pas de 15 s,
+  publié par lots avec ~2 min de retard, ordre décroissant). Energinet `PowerSystemRightNow` n'a **pas** de
+  fréquence ; Fingrid demande une clé ; Swissgrid n'a pas d'API ouverte trouvée.
+- **Pas d'unité hertz** dans Gladys : `unknown/unknown` avec l'unité dans le nom (comme emoncms) ; l'état du
+  réseau en `risk/integer` 0–2.
+- Seuils d'état par zone (`src/zones.js`) : plage standard SOGL (±50 / ±100 / ±200 mHz) puis réserve primaire
+  pleinement mobilisée ou limite légale (±200 / ±500 / ±500 mHz).
+- Déclencheurs en mémoire seulement : un écart dure de quelques secondes à quelques minutes, un redémarrage
+  coûte au pire un doublon. Retour à la normale sous 80 % du seuil (hystérésis).
+- Widget : la courbe passe par `chart.device_features` + `interval: 'last-hour'` (historique du cœur, Gladys
+  ≥ 5.2.0), seulement quand l'appareil est ajouté.
+- En allemand, « Sie ist… » (elle) en début de phrase est pris pour le vouvoiement par `test/i18n.test.js` :
+  reformuler.
