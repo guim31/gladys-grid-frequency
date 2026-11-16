@@ -137,8 +137,7 @@ duración de la desviación (segundos), zona.
 | Gran Bretaña       | Elexon BMRS, frecuencia del sistema (FREQ)        | cada 15 s, ~2 min de retraso |
 
 La segunda fuente continental solo se consulta cuando la primera falla,
-responde algo inverosímil o un valor de más de un minuto. La integración
-consulta cada fuente como máximo una vez por intervalo (10 s como mínimo),
+responde algo inverosímil o un valor de más de un minuto. En funcionamiento normal, la integración consulta cada fuente como máximo una vez por intervalo (10 s como mínimo),
 muy por debajo del «una vez por segundo» que permite netzfrequenzmessung.de.
 Su interfaz está pensada para un uso privado: una instalación domótica lo es.
 Los datos de Elexon se publican bajo la licencia de datos BMRS de Elexon.

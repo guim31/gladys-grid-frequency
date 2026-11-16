@@ -24,7 +24,7 @@ import { normalizeConfig } from './config.js';
 import { buildDevices, zoneIds, zoneStates } from './devices.js';
 import { MESSAGES, NAMES, STATE_TEXT, TEXT, ZONE_NAMES, joinTexts, pick } from './i18n.js';
 import { createIssueLog } from './issues.js';
-import { SOURCES, SourceError } from './sources.js';
+import { FALLBACK_TIMEOUT_MS, REQUEST_TIMEOUT_MS, SOURCES, SourceError } from './sources.js';
 import { WIDGET_KEY, buildWidgetContent } from './widgets.js';
 import { deviationMhz, gridState, zonesOf } from './zones.js';
 
@@ -71,6 +71,7 @@ export function registerHandlers(
   const readings = new Map();
   /** zone key → ongoing excursion `{ since, peak, direction }`. */
   const alerts = new Map();
+  let alertThreshold = null;
   const widgetShownAt = new Map();
   let lastTickAt = -Infinity;
   let lastStatus = null;
@@ -87,14 +88,23 @@ export function registerHandlers(
   const zoneOfDevice = (externalId) =>
     zones.find((zone) => zoneIds(gladys, zone).device === externalId) ?? null;
   const isFailing = (zone) => zoneIssues.isFailing(zone.key);
+  /**
+   * The reading of a zone, if it is still current: after an outage longer
+   * than the freshness window of the zone, nothing is shown nor republished
+   * rather than an old value passed off as the grid of now.
+   */
+  const currentReading = (zone) => {
+    const reading = readings.get(zone.key);
+    return reading && now() - reading.measuredAt <= zone.maxAgeMs ? reading : null;
+  };
   const wanted = (zone) =>
     isCreated(zone) || now() - (widgetShownAt.get(zone.key) ?? -Infinity) < WIDGET_INTEREST_MS;
 
   // --- Reading the sources ------------------------------------------------------
 
   /** One source of a zone, checked for freshness. Throws a SourceError. */
-  async function readSource(zone, key) {
-    const result = await SOURCES[key].read(fetchImpl, now());
+  async function readSource(zone, key, timeoutMs = REQUEST_TIMEOUT_MS) {
+    const result = await SOURCES[key].read(fetchImpl, now(), timeoutMs);
     const age = now() - result.measuredAt;
     if (age > zone.maxAgeMs) {
       throw new SourceError(`stale value (${Math.round(age / 1000)} s old)`);
@@ -105,9 +115,13 @@ export function registerHandlers(
   /** Read one zone, its sources in order; true when one answered. */
   async function refreshZone(zone) {
     const errors = [];
-    for (const key of zone.sources) {
+    for (const [i, key] of zone.sources.entries()) {
       try {
-        const result = await readSource(zone, key);
+        const result = await readSource(
+          zone,
+          key,
+          i === 0 ? REQUEST_TIMEOUT_MS : FALLBACK_TIMEOUT_MS,
+        );
         sourceIssues.ok(key, `${SOURCES[key].name} answers again`);
         readings.set(zone.key, { ...result, readAt: now() });
         zoneIssues.ok(zone.key, `${zone.key}: frequency readable again`);
@@ -128,7 +142,7 @@ export function registerHandlers(
   async function publishStates() {
     const states = zones
       .filter(isCreated)
-      .flatMap((zone) => zoneStates(gladys, zone, readings.get(zone.key), timeZone));
+      .flatMap((zone) => zoneStates(gladys, zone, currentReading(zone), timeZone));
     if (states.length === 0) {
       return;
     }
@@ -153,8 +167,9 @@ export function registerHandlers(
       const device = zoneIds(gladys, zone).device;
       const name = pick(ZONE_NAMES[zone.key], config.language);
       const alert = alerts.get(zone.key);
-      if (!alert && away >= threshold) {
-        const direction = deviation < 0 ? 'low' : 'high';
+      // A new excursion, or a swing straight to the other side of 50 Hz.
+      const direction = deviation < 0 ? 'low' : 'high';
+      if (away >= threshold && (!alert || alert.direction !== direction)) {
         const fired = await fire(DEVIATION_TRIGGER_KEY, {
           device,
           direction,
@@ -271,11 +286,16 @@ export function registerHandlers(
     stopped = false;
     lastStatus = null;
     zones = zonesOf(config);
-    // A new threshold or a zone dropped: excursions start afresh.
-    alerts.clear();
-    for (const key of readings.keys()) {
+    // A new threshold: excursions start afresh. A reconnection or another
+    // setting keeps them, so an excursion in progress does not fire twice.
+    if (config.thresholdMhz !== alertThreshold) {
+      alerts.clear();
+      alertThreshold = config.thresholdMhz;
+    }
+    for (const key of new Set([...readings.keys(), ...alerts.keys()])) {
       if (!zones.some((zone) => zone.key === key)) {
         readings.delete(key);
+        alerts.delete(key);
       }
     }
     try {
@@ -396,7 +416,7 @@ export function registerHandlers(
       ...common,
       title: device?.name ?? `${names.device} ${pick(ZONE_NAMES[zone.key], language)}`,
       zone,
-      reading: readings.get(zone.key) ?? null,
+      reading: currentReading(zone),
       frequencyFeature: device ? ids.feature('frequency') : null,
       failing: isFailing(zone),
     });

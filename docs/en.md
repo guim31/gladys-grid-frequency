@@ -131,8 +131,8 @@ duration of the excursion (seconds), zone.
 | Great Britain      | Elexon BMRS, system frequency (FREQ)              | every 15 s, ~2 min late |
 
 The second continental source is asked only when the first fails, answers
-something implausible or a value older than a minute. The integration asks
-each source at most once per interval (10 s at least), far below the "once a
+something implausible or a value older than a minute. In normal operation, the
+integration asks each source at most once per interval (10 s at least), far below the "once a
 second" netzfrequenzmessung.de allows. Its interface is meant for private
 use: a home automation system is one. Elexon data is published under the
 Elexon BMRS data licence.

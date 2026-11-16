@@ -53,8 +53,7 @@ The full documentation, in four languages, is in [`docs/`](docs/en.md).
 
 A zone tries its sources in order: the next one when the previous one fails,
 answers an implausible value (outside 45–55 Hz) or a measurement too old (one
-minute on the continent, two in the Nordic area, ten in Great Britain). Each
-source is asked at most once per interval, never more than once every ten
+minute on the continent, two in the Nordic area, ten in Great Britain). In normal operation, each source is asked at most once per interval, never more than once every ten
 seconds. The integration stores nothing.
 
 Gladys has no hertz unit: the frequency and the deviation are `unknown`

@@ -287,3 +287,38 @@ test('Gladys unreachable: the tick waits', async (t) => {
   assert.equal(world.api.count('netzfrequenzmessung'), 1);
   assert.equal(START, world.clock.now() - 30_000);
 });
+
+test('a swing straight to the other side fires again; the language saved keeps the excursion', async (t) => {
+  const world = await createWorld({ config: {} });
+  t.after(() => world.app.stop());
+  const step = async (frequency) => {
+    world.clock.advance(30_000);
+    world.api.setFrequency(frequency, world.clock.now());
+    await world.app.tick();
+  };
+  const directions = () =>
+    world.fake.sceneEvents
+      .filter((e) => e.key === DEVIATION_TRIGGER_KEY)
+      .map((e) => e.data.direction);
+  await step(49.85);
+  await step(50.12);
+  assert.deepEqual(directions(), ['low', 'high']);
+  await world.fake.configUpdated({ language: 'en' });
+  await step(50.13);
+  assert.deepEqual(directions(), ['low', 'high'], 'a new language is no new excursion');
+  await world.fake.configUpdated({ language: 'en', alert_threshold_mhz: '50' });
+  assert.deepEqual(directions(), ['low', 'high', 'high'], 'a new threshold starts afresh');
+});
+
+test('after a long outage the old value is neither republished nor shown', async (t) => {
+  const world = await createWorld({ config: {} });
+  t.after(() => world.app.stop());
+  world.api.down.add('netzfrequenzmessung');
+  world.api.down.add('netzfrequenz_info');
+  const published = world.fake.states.length;
+  world.clock.advance(7 * 60 * 60 * 1000);
+  await world.app.tick();
+  assert.equal(world.fake.states.length, published, 'no heartbeat of a stale value');
+  const ack = await world.fake.widgetGet('grid_frequency', { settings: {}, language: 'en' });
+  assert.match(ack.data.content.components[1].text, /No source answers/);
+});

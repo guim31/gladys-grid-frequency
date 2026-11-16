@@ -17,7 +17,12 @@
 //                            in batches about two minutes late.
 // -----------------------------------------------------------------------------
 
+/**
+ * Per request: the first source of a zone gets 8 s, a fallback 4 s, so a zone
+ * whose sources all hang is given up after 12 s (a widget request waits on it).
+ */
 export const REQUEST_TIMEOUT_MS = 8_000;
+export const FALLBACK_TIMEOUT_MS = 4_000;
 
 /** Any frequency outside this band is a broken answer, not a grid event (blackout at 47.5 Hz). */
 export const PLAUSIBLE = { min: 45, max: 55 };
@@ -34,12 +39,12 @@ export class SourceError extends Error {
  * @param {typeof fetch} fetchImpl
  * @param {string} url
  */
-async function getText(fetchImpl, url) {
+async function getText(fetchImpl, url, timeoutMs = REQUEST_TIMEOUT_MS) {
   let response;
   try {
     response = await fetchImpl(url, {
       headers: { accept: 'application/json, application/xml;q=0.9, */*;q=0.5' },
-      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      signal: AbortSignal.timeout(timeoutMs),
     });
   } catch (err) {
     // A DNS failure, a refused connection, the timeout: the cause names it.
@@ -52,8 +57,8 @@ async function getText(fetchImpl, url) {
   return response.text();
 }
 
-async function getJson(fetchImpl, url) {
-  const text = await getText(fetchImpl, url);
+async function getJson(fetchImpl, url, timeoutMs) {
+  const text = await getText(fetchImpl, url, timeoutMs);
   try {
     return JSON.parse(text);
   } catch {
@@ -132,29 +137,30 @@ const iso = (ms) => new Date(ms).toISOString().replace(/\.\d{3}Z$/, 'Z');
 export const SOURCES = {
   netzfrequenzmessung: {
     name: 'netzfrequenzmessung.de',
-    read: async (fetchImpl) =>
-      parseNetzfrequenzmessung(await getText(fetchImpl, NETZFREQUENZMESSUNG_URL)),
+    read: async (fetchImpl, now, timeoutMs) =>
+      parseNetzfrequenzmessung(await getText(fetchImpl, NETZFREQUENZMESSUNG_URL, timeoutMs)),
   },
   netzfrequenz_info: {
     name: 'netzfrequenz.info',
-    read: async (fetchImpl) =>
-      parseNetzfrequenzInfo(await getJson(fetchImpl, NETZFREQUENZ_INFO_URL)),
+    read: async (fetchImpl, now, timeoutMs) =>
+      parseNetzfrequenzInfo(await getJson(fetchImpl, NETZFREQUENZ_INFO_URL, timeoutMs)),
   },
   statnett: {
     name: 'Statnett',
     // The last minute only (the default is the last hour, 3600 values).
-    read: async (fetchImpl, now) =>
-      parseStatnett(await getJson(fetchImpl, `${STATNETT_URL}?From=${now - 60_000}`)),
+    read: async (fetchImpl, now, timeoutMs) =>
+      parseStatnett(await getJson(fetchImpl, `${STATNETT_URL}?From=${now - 60_000}`, timeoutMs)),
   },
   elexon: {
     name: 'Elexon BMRS',
     // The last ten minutes: the values arrive about two minutes late.
-    read: async (fetchImpl, now) =>
+    read: async (fetchImpl, now, timeoutMs) =>
       parseElexon(
         await getJson(
           fetchImpl,
           `${ELEXON_URL}?measurementDateTimeFrom=${iso(now - 600_000)}` +
             `&measurementDateTimeTo=${iso(now + 60_000)}&format=json`,
+          timeoutMs,
         ),
       ),
   },

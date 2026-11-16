@@ -137,7 +137,7 @@ Variables : fréquence, écart, écart maximal (mHz), durée de l'écart
 
 La seconde source continentale n'est interrogée que si la première échoue,
 répond une valeur invraisemblable ou vieille de plus d'une minute.
-L'intégration interroge chaque source au plus une fois par intervalle (10 s au
+En fonctionnement normal, l'intégration interroge chaque source au plus une fois par intervalle (10 s au
 minimum), bien en deçà du « une fois par seconde » que permet
 netzfrequenzmessung.de. Son interface est destinée à un usage privé : une
 installation domotique en est un. Les données d'Elexon sont publiées sous la

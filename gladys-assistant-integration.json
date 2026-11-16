@@ -41,6 +41,15 @@
           }
         },
         {
+          "url": "https://www.netzfrequenz.info",
+          "label": {
+            "en": "netzfrequenz.info",
+            "fr": "netzfrequenz.info",
+            "de": "netzfrequenz.info",
+            "es": "netzfrequenz.info"
+          }
+        },
+        {
           "url": "https://driftsdata.statnett.no",
           "label": {
             "en": "Statnett operational data",

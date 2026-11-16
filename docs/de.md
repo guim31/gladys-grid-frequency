@@ -134,8 +134,7 @@ Dauer der Abweichung (Sekunden), Zone.
 | Großbritannien    | Elexon BMRS, Systemfrequenz (FREQ)                          | alle 15 s, ~2 Min. verspätet |
 
 Die zweite kontinentale Quelle wird nur gefragt, wenn die erste ausfällt,
-etwas Unplausibles oder einen Wert älter als eine Minute liefert. Die
-Integration fragt jede Quelle höchstens einmal pro Intervall (mindestens
+etwas Unplausibles oder einen Wert älter als eine Minute liefert. Im Normalbetrieb fragt die Integration jede Quelle höchstens einmal pro Intervall (mindestens
 10 s), weit unter dem „einmal pro Sekunde“, das netzfrequenzmessung.de
 erlaubt. Deren Schnittstelle ist für den privaten Gebrauch gedacht: Eine
 Hausautomation ist einer. Die Daten von Elexon stehen unter der BMRS-
