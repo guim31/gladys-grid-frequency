@@ -418,7 +418,8 @@ export function registerHandlers(
       zone,
       reading: currentReading(zone),
       frequencyFeature: device ? ids.feature('frequency') : null,
-      failing: isFailing(zone),
+      // A reading that expired is an outage too, before the next failed tick says so.
+      failing: isFailing(zone) || (readings.has(zone.key) && !currentReading(zone)),
     });
   });
 
