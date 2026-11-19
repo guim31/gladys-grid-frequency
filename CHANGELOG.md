@@ -10,6 +10,8 @@ the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-11-19
+
 ### Added
 
 - The real-time frequency of the European power grids from open sources,
@@ -27,3 +29,6 @@ the notes of the version's GitHub Release.
 - A "Test the sources" button, and the zones without an answering source
   shown on the Configuration screen.
 - Every text in English, French, German and Spanish.
+
+[Unreleased]: https://github.com/guim31/gladys-grid-frequency/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/guim31/gladys-grid-frequency/releases/tag/v1.0.0
