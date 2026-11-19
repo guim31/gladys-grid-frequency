@@ -1,0 +1,19 @@
+{
+  "data": [
+    { "dataset": "FREQ", "measurementTime": "2026-11-16T15:17:45Z", "frequency": 49.94 },
+    { "dataset": "FREQ", "measurementTime": "2026-11-16T15:17:30Z", "frequency": 49.943 },
+    { "dataset": "FREQ", "measurementTime": "2026-11-16T15:17:15Z", "frequency": 49.96 },
+    { "dataset": "FREQ", "measurementTime": "2026-11-16T15:17:00Z", "frequency": 49.977 },
+    { "dataset": "FREQ", "measurementTime": "2026-11-16T15:16:45Z", "frequency": 49.983 },
+    { "dataset": "FREQ", "measurementTime": "2026-11-16T15:16:30Z", "frequency": 49.978 },
+    { "dataset": "FREQ", "measurementTime": "2026-11-16T15:16:15Z", "frequency": 49.975 },
+    { "dataset": "FREQ", "measurementTime": "2026-11-16T15:16:00Z", "frequency": 49.991 },
+    { "dataset": "FREQ", "measurementTime": "2026-11-16T15:15:45Z", "frequency": 49.969 },
+    { "dataset": "FREQ", "measurementTime": "2026-11-16T15:15:30Z", "frequency": 49.99 },
+    { "dataset": "FREQ", "measurementTime": "2026-11-16T15:15:15Z", "frequency": 49.987 },
+    { "dataset": "FREQ", "measurementTime": "2026-11-16T15:15:00Z", "frequency": 50.001 },
+    { "dataset": "FREQ", "measurementTime": "2026-11-16T15:14:45Z", "frequency": 50.021 },
+    { "dataset": "FREQ", "measurementTime": "2026-11-16T15:14:30Z", "frequency": 50.018 },
+    { "dataset": "FREQ", "measurementTime": "2026-11-16T15:14:15Z", "frequency": 50.018 }
+  ]
+}

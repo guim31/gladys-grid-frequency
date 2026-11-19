@@ -30,6 +30,12 @@ Gladys before reporting a problem.
 
 In scope: the code of this repository and the Docker image it publishes.
 
+The integration stores nothing: no file under `/data`, no secret (no source
+needs a key or an account). It only calls, over HTTPS,
+`https://dat.netzfrequenzmessung.de:9080`, `https://www.netzfrequenz.info`,
+`https://driftsdata.statnett.no` and `https://data.elexon.co.uk`, sending
+nothing but the time window it asks for, and opens no port.
+
 Out of scope: Gladys Assistant itself (see its
 [security policy](https://github.com/GladysAssistant/Gladys/security/policy)),
-and the third-party services and devices the integration talks to.
+and the sources of the data.
